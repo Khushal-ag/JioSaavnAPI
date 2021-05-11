@@ -17,16 +17,44 @@ def home():
 @app.route('/song/')
 def search():
     lyrics = False
+    songdata = True
     query = request.args.get('query')
     lyrics_ = request.args.get('lyrics')
+    songdata_ = request.args.get('songdata')
     if lyrics_ and lyrics_.lower()!='false':
         lyrics = True
+    if songdata_ and songdata_.lower()!='true':
+        songdata = False
     if query:
-        return jsonify(jiosaavn.search_for_song(query,lyrics))
+        return jsonify(jiosaavn.search_for_song(query, lyrics, songdata))
     else:
         error = {
             "status": False,
             "error":'Query is required to search songs!'
+        }
+        return jsonify(error)
+
+@app.route('/song/get/')
+def get_song():
+    lyrics = False
+    id = request.args.get('id')
+    lyrics_ = request.args.get('lyrics')
+    if lyrics_ and lyrics_.lower()!='false':
+        lyrics = True
+    if id:
+        resp = jiosaavn.get_song(id,lyrics)
+        if not resp:
+            error = {
+                "status": False,
+                "error": 'Invalid Song ID received!'
+            }
+            return jsonify(error)
+        else:
+            return jsonify(resp)
+    else:
+        error = {
+            "status": False,
+            "error": 'Song ID is required to get a song!'
         }
         return jsonify(error)
 
@@ -99,15 +127,13 @@ def lyrics():
 @app.route('/result/')
 def result():
     lyrics = False
-    false = False
-    true = True
     query = request.args.get('query')
     lyrics_ = request.args.get('lyrics')
     if lyrics_ and lyrics_.lower()!='false':
         lyrics = True
 
     if 'saavn' not in query:
-        return jsonify(jiosaavn.search_for_song(query,lyrics))
+        return jsonify(jiosaavn.search_for_song(query,lyrics,True))
     try:
         if '/song/' in query:
             print("Song")
